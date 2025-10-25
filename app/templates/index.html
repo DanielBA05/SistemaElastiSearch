@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Sistema de Búsqueda — Biblioteca</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    .row { margin-bottom: 1rem; }
+    input, select, button { padding: .5rem; font-size: 1rem; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 1rem; margin: .5rem 0; }
+    .muted { color: #666; font-size: .9rem; }
+    .suggest { border: 1px solid #eee; padding: .5rem; margin-top: .3rem; max-width: 520px; }
+    .suggest span { cursor: pointer; display: inline-block; padding: .25rem .5rem; margin: .15rem; border-radius: 8px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>Sistema de Búsqueda — Biblioteca</h1>
+
+  <div class="row">
+    <input id="q" placeholder="Buscar 'bases de datos'..." size="50" oninput="debouncedSuggest()"/>
+  </div>
+  <div id="suggest" class="suggest"></div>
+
+  <div class="row">
+    <select id="categoria">
+      <option value="">Todas las categorías</option>
+      <option>Informática</option><option>Ciencia</option><option>Historia</option>
+      <option>Matemática</option><option>Literatura</option><option>Salud</option>
+    </select>
+    <input id="anio" type="number" placeholder="Año (e.g. 2023)" />
+    <button onclick="runSearch()">Buscar</button>
+    <button onclick="runFuzzy()">Fuzzy</button>
+  </div>
+
+  <div id="meta" class="muted"></div>
+  <div id="results"></div>
+
+<script>
+let timer=null;
+
+function debouncedSuggest(){
+  clearTimeout(timer);
+  timer=setTimeout(suggest, 200);
+}
+
+async function suggest(){
+  const prefix=document.getElementById('q').value.trim();
+  const box=document.getElementById('suggest');
+  if(!prefix){ box.innerHTML=""; return; }
+  const res = await fetch(`/suggest?prefix=${encodeURIComponent(prefix)}`);
+  const data = await res.json();
+  box.innerHTML = data.suggestions.map(s => `<span onclick="useSuggest('${s.replace(/'/g,"\\'")}')">${s}</span>`).join('');
+}
+
+function useSuggest(s){
+  document.getElementById('q').value = s;
+  document.getElementById('suggest').innerHTML = '';
+  runSearch();
+}
+
+async function runSearch(){
+  const q = document.getElementById('q').value.trim();
+  const categoria = document.getElementById('categoria').value;
+  const anio = document.getElementById('anio').value.trim();
+  const params = new URLSearchParams({ q, categoria, anio });
+  const res = await fetch(`/search?${params.toString()}`);
+  const data = await res.json();
+  render(data);
+}
+
+async function runFuzzy(){
+  await runSearch();
+}
+
+function render(data){
+  document.getElementById('meta').textContent = `Resultados: ${data.total}`;
+  const html = data.results.map(r => `
+    <div class="card">
+      <div><strong>${r.titulo}</strong> <span class="muted">(${r.anio})</span></div>
+      <div class="muted">${r.autor} — ${r.categoria}</div>
+      <p>${r.descripcion}</p>
+      <div class="muted">_score: ${r.score?.toFixed?.(2) ?? r.score}</div>
+    </div>
+  `).join('');
+  document.getElementById('results').innerHTML = html || '<div class="muted">Sin resultados.</div>';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "spanish_text": {
+          "type": "standard",
+          "stopwords": "_spanish_"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "titulo":      { "type": "text", "analyzer": "spanish_text" },
+      "autor":       { "type": "text", "analyzer": "spanish_text" },
+      "categoria":   { "type": "keyword" },
+      "descripcion": { "type": "text", "analyzer": "spanish_text" },
+      "anio":        { "type": "integer" },
+      "titulo_suggest": {
+        "type": "completion",
+        "analyzer": "spanish_text",
+        "preserve_separators": true,
+        "preserve_position_increments": true,
+        "max_input_length": 100
+      }
+    }
+  }
+}
