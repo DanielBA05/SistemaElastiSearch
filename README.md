@@ -1,4 +1,4 @@
-# Sistema de Búsqueda Inteligente con Elasticsearch (MVP)
+# Sistema de Búsqueda Inteligente con Elasticsearch 
 
 Este proyecto despliega Elasticsearch + Kibana con Docker y una aplicación Flask
 para realizar búsquedas por texto completo, filtros, fuzzy y autocompletado.
